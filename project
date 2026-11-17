@@ -1,0 +1,237 @@
+#include<stdio.h>
+#include<string.h>
+#define MAX_CANDIDATES 3
+#define Max_VOTERS 100 
+// Structure for Candidate
+
+typedef struct{
+    int id;
+    char name[50];
+    int votecount;  
+}candidate;
+// Structure for Voter
+
+typedef struct{
+    int voterid;
+    char name[50];
+    int age;
+    int hasvoted;// 0 for false, 1 for true
+}voter;
+void displayheader();
+int registervoter(voter voters[], int*totalvoters);
+void displaycandidates(candidate candidates[],int size);
+void castvote(voter *v,candidate candidates[],int size);
+void calculatewinner(candidate candidates[],int size);
+void displaystatistics(candidate candidates[],int size,int totalvotescast);
+int main(){
+    // Initializing Candidates
+    candidate candidates[MAX_CANDIDATES]={
+        {1,"Alikhan",0},
+        {2,"Saraahmed",0},
+        {3,"Bilalahmed",0}
+    };
+    voter voters[Max_VOTERS];
+    int totalvoters=0;
+    int choice;
+    displayheader();
+    do{
+     printf("\n==============================\n");
+     printf("     ONLINE ELECTION SYSTEM      ");
+    printf("\n==============================\n");
+    printf("1.register new voter\n"),
+    printf("2.cast vote\n"),
+    printf("3.display election results and winner\n");
+    printf("4.exit system\n");
+    printf("enter your choice");
+    scanf("%d",&choice);
+    switch(choice){
+        case 1:{
+        int status=registervoter(voters,&totalvoters);
+        if(status==1){
+            printf("\n voter registered successfully!");
+        }
+        else if(status==-1){
+            printf("registraion failed.voter's age must be 18 above to vote");
+        }
+        else{
+            printf("error(duplicate id or maximum limit reached)");
+        }
+        break;
+        }
+    case 2:{
+    int vtd;
+    printf("\nenter your voter id to vote:");
+    scanf("%d",&vtd);
+    int foundindex=-1;
+    for(int i=0;i<totalvoters;i++){
+        if(voters[i].voterid==vtd){
+            foundindex=i;
+            break;
+        }
+    }
+    if(foundindex==-1){
+        printf("\nvoter id not found!please register it");
+    }
+    else if(voters[foundindex].hasvoted==1){
+        printf("you have already cast your vote");
+    }
+    else{
+        displaycandidates(candidates,MAX_CANDIDATES);
+         // Passing voter pointer using pointers concept
+        castvote(&voters[foundindex],candidates,MAX_CANDIDATES);
+
+    }
+    break;
+}
+case 3:{
+    printf("\n ELECTION RESULTS AND STATISTICS\n");
+    displaycandidates(candidates,MAX_CANDIDATES);
+    calculatewinner(candidates,MAX_CANDIDATES);
+    displaystatistics(candidates,MAX_CANDIDATES,totalvoters);
+    break;
+}
+ case 4:
+
+                printf("\nExiting Online Election System. Thank you!\n");
+                break;
+            default:
+                printf("\n invalid choice please enter a valid option (1-4).\n");
+        }
+    } while (choice != 4);
+
+    return 0;
+}
+// Voter Registration & 18+ Check
+void displayheader(){
+   printf("========================================\n");
+    printf("   FAST NATIONAL UNIVERSITY OF COMPUTER      \n");
+    printf("     AND EMERGING SCIENCES (KARACHI)    \n");
+    printf("       PROGRAMMING FUNDAMENTALS         \n");
+    printf("========================================\n");
+}
+
+int registervoter(voter voters[], int*totalvoters){
+    if(*totalvoters>=Max_VOTERS){
+        return 0;
+    }
+    voter newvoter;
+    printf("\n VOTER REGISRATION POTAL\n");
+    printf("enter voter id");
+    scanf("%d",&newvoter.voterid);
+     // Check for duplicate ID using pointer/loop logic
+    for(int i=0;i<*totalvoters;i++){
+        if(voters[i].voterid==newvoter.voterid){
+            printf("voter id alraady exists!");
+            return 0;
+        }
+    }
+    printf("enter voter name:");
+    scanf(" %[^\n]s",newvoter.name);
+
+    printf("enter the voter age");
+    scanf("%d",&newvoter.age);
+
+    if(newvoter.age<18){
+        return -1;// Underage
+    }
+
+    newvoter.hasvoted=0;// initially has no votted
+    voters[*totalvoters]=newvoter;
+    (*totalvoters)++;
+    return 1; 
+}
+ //Candidate Management & Voting
+
+void displaycandidates(candidate candidates[],int size){
+    printf("LIST OF CANDIDATES");
+
+    for(int i=0; i<size; i++) {
+    printf("%d %s(candidate id: %d)\n",i+1,candidates[i].name,candidates[i].id);
+    }
+ 
+}  
+void castvote(voter *v,candidate candidates[],int size){
+    int candidatechoice;
+printf("welcome, %s please enter candidate id to vote:",v->name);
+scanf("%d",&candidatechoice);
+
+int validcandidate=0;
+
+for(int i=0;i<size;i++){
+    if(candidates[i].id==candidatechoice){
+        candidates[i].votecount++;
+        v->hasvoted=1;// Mark voter as voted (One vote per user policy
+        validcandidate=1;
+        printf("\n [success] vote successfully cast for %s\n",candidates[i].name);
+        break;
+    }
+}
+if(!validcandidate){
+    printf("\n invalid candidate ID selected.\n");
+}
+}
+
+ //Vote Counting & Winner Declaration
+void calculatewinner(candidate candidates[],int size){
+    int maxvotes=-1;
+    int winnerindex=0;
+    int tie=0;
+
+    for(int i=0;i<size;i++){
+        if(candidates[i].votecount > maxvotes){
+            maxvotes=candidates[i].votecount;
+            winnerindex=i;
+            tie=0;
+        }
+        else if(candidates[i].votecount==maxvotes && maxvotes>0)
+        {
+            tie=1;
+
+        }
+    }
+    printf("\n===================== \n");
+    if(maxvotes==0)
+    {
+        printf("result: no votes have been cast yet.\n");
+    }
+    else if(tie)
+    {
+        printf("result: there is a tie between candidates\n");
+    }
+    else
+    {
+        printf("winner annoucement:\n");
+        printf("congratulations  to %s with %d votes!\n",candidates[winnerindex].name,candidates[winnerindex].votecount);
+        printf("\n============================================== \n");
+    }
+
+}
+void displaystatistics(candidate candidates[],int size, int totalregisteredvoters){
+    int totalvotescast=0;
+
+    for(int i=0;i<size;i++)
+    {
+        totalvotescast+=candidates[i].votecount;
+
+    }
+    printf("\n ELECTION SUMMARY STATISTICS \n");
+    printf("total registered voters %d\n",totalregisteredvoters);
+    printf("total votes cast: %d",totalvotescast);
+
+    if(totalregisteredvoters>0)
+    {
+       float turnoutpercentage=((float)totalvotescast/totalregisteredvoters)*100;
+       printf("turnout percentage : %.2f %%\n",turnoutpercentage);
+    }
+    else
+    {
+        printf("turnout percentage:0.00%%\n");
+    }
+}
+ 
+
+    
+        
+    
+        
+
